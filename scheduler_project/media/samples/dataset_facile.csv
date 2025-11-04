@@ -1,0 +1,9 @@
+task_name,duration,successors,release_date,due_date
+task_a_1,61,task_a_2,243,398
+task_a_2,36,none,304,398
+task_b_1,44,task_b_2,45,157
+task_b_2,26,none,89,157
+task_c_1,74,task_c_2,228,448
+task_c_2,64,none,302,448
+,,,,
+MACHINES,"m_1,m_2,m_3,m_4",,,

@@ -1,0 +1,139 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Home - Task Scheduler{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <h1 class="display-4 text-white fw-bold mb-3">
+            <i class="bi bi-calendar-check"></i> Task Scheduler
+        </h1>
+        <p class="lead text-white">Optimize your parallel machine scheduling with OR-Tools</p>
+        <a href="{% url 'create_choice' %}" class="btn btn-light btn-lg mt-3">
+            <i class="bi bi-plus-circle"></i> Create New Schedule
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list-ul"></i> All Schedules
+            </div>
+            <div class="card-body">
+                {% if schedules %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Created</th>
+                                    <th>Status</th>
+                                    <th>Tasks</th>
+                                    <th>Machines</th>
+                                    <th>Makespan</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for schedule in schedules %}
+                                <tr>
+                                    <td class="fw-bold">{{ schedule.name }}</td>
+                                    <td>{{ schedule.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        {% if schedule.status == 'solved' %}
+                                            <span class="badge bg-success">
+                                                <i class="bi bi-check-circle"></i> Solved
+                                            </span>
+                                        {% elif schedule.status == 'pending' %}
+                                            <span class="badge bg-warning">
+                                                <i class="bi bi-clock"></i> Pending
+                                            </span>
+                                        {% elif schedule.status == 'no_solution' %}
+                                            <span class="badge bg-danger">
+                                                <i class="bi bi-x-circle"></i> No Solution
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ schedule.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ schedule.tasks.count }}</td>
+                                    <td>{{ schedule.machines.count }}</td>
+                                    <td>
+                                        {% if schedule.makespan %}
+                                            {{ schedule.makespan }} units
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'schedule_detail' schedule.id %}" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                        {% if schedule.status == 'solved' %}
+                                            <a href="{% url 'results' schedule.id %}" class="btn btn-sm btn-success">
+                                                <i class="bi bi-graph-up"></i> Results
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'delete_schedule' schedule.id %}" 
+                                           class="btn btn-sm btn-danger"
+                                           onclick="return confirm('Are you sure you want to delete this schedule?');">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                        <p class="text-muted mt-3">No schedules created yet.</p>
+                        <a href="{% url 'create_choice' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Create Your First Schedule
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+{% if schedules %}
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-center bg-primary text-white">
+            <div class="card-body">
+                <h3 class="display-4">{{ schedules.count }}</h3>
+                <p class="mb-0">Total Schedules</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-success text-white">
+            <div class="card-body">
+                <h3 class="display-4">{{ schedules|length }}</h3>
+                <p class="mb-0">Solved Schedules</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center bg-info text-white">
+            <div class="card-body">
+                <h3 class="display-4">
+                    {% for schedule in schedules %}
+                        {% if forloop.first %}{{ schedule.tasks.count }}{% endif %}
+                    {% empty %}
+                        0
+                    {% endfor %}
+                </h3>
+                <p class="mb-0">Average Tasks</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

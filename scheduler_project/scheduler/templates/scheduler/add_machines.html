@@ -1,0 +1,73 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Add Machines - {{ schedule.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-cpu"></i> Add Machines to "{{ schedule.name }}"
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            <i class="bi bi-tag"></i> Machine Name *
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">{{ form.name.errors }}</div>
+                        {% endif %}
+                        <small class="form-text text-muted">
+                            Examples: m_1, Machine_A, Production_Line_1
+                        </small>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" name="add_machine" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Add Machine
+                        </button>
+                        <button type="submit" name="done" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Done - Add Tasks
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list"></i> Added Machines ({{ machines.count }})
+            </div>
+            <div class="card-body">
+                {% if machines %}
+                    <div class="list-group">
+                        {% for machine in machines %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>
+                                <i class="bi bi-cpu text-primary"></i> 
+                                <strong>{{ machine.name }}</strong>
+                            </span>
+                            <a href="{% url 'delete_machine' schedule.id machine.id %}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Delete this machine?');">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> No machines added yet. Please add at least one machine.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

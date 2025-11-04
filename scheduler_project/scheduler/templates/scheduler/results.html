@@ -1,0 +1,176 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Results - {{ schedule.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-graph-up"></i> Results: {{ schedule.name }}</span>
+                <div>
+                    <a href="{% url 'export_pdf' schedule.id %}" class="btn btn-danger">
+                        <i class="bi bi-file-pdf"></i> Export as PDF
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Summary Statistics -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white text-center">
+                            <div class="card-body">
+                                <h3 class="display-6">{{ schedule.makespan }}</h3>
+                                <p class="mb-0">Makespan (Time Units)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white text-center">
+                            <div class="card-body">
+                                <h3 class="display-6">{{ tasks.count }}</h3>
+                                <p class="mb-0">Total Tasks</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white text-center">
+                            <div class="card-body">
+                                <h3 class="display-6">{{ machines.count }}</h3>
+                                <p class="mb-0">Total Machines</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white text-center">
+                            <div class="card-body">
+                                <h3 class="display-6">{{ schedule.objective_value|floatformat:1 }}</h3>
+                                <p class="mb-0">Objective Value</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Machine Assignments -->
+                <div class="mb-4">
+                    <h5><i class="bi bi-cpu"></i> Machine Assignments</h5>
+                    <div class="row">
+                        {% for machine_name, machine_tasks in machine_assignments.items %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card">
+                                <div class="card-header bg-info text-white">
+                                    <i class="bi bi-cpu"></i> {{ machine_name }}
+                                </div>
+                                <div class="card-body">
+                                    {% if machine_tasks %}
+                                        <ul class="list-group">
+                                            {% for task in machine_tasks %}
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                <span>
+                                                    <strong>{{ task.name }}</strong>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Start: {{ task.start_time }} | End: {{ task.end_time }}
+                                                    </small>
+                                                </span>
+                                                <span class="badge bg-primary rounded-pill">
+                                                    {{ task.duration }} units
+                                                </span>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        
+                                        <!-- Machine utilization -->
+                                        {% with total_work=machine_tasks|length %}
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                Total tasks: {{ machine_tasks|length }}
+                                            </small>
+                                        </div>
+                                        {% endwith %}
+                                    {% else %}
+                                        <p class="text-muted mb-0">No tasks assigned to this machine.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Task Details Table -->
+                <div class="mb-4">
+                    <h5><i class="bi bi-clipboard-check"></i> Task Execution Details</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Duration</th>
+                                    <th>Machine</th>
+                                    <th>Start Time</th>
+                                    <th>End Time</th>
+                                    <th>Release Date</th>
+                                    <th>Due Date</th>
+                                    <th>Slack</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in tasks %}
+                                <tr {% if task.slack <= 5 %}class="table-warning"{% endif %}>
+                                    <td><strong>{{ task.name }}</strong></td>
+                                    <td>{{ task.duration }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ task.assigned_machine.name }}</span>
+                                    </td>
+                                    <td>{{ task.start_time }}</td>
+                                    <td>{{ task.end_time }}</td>
+                                    <td>{{ task.release_date }}</td>
+                                    <td>{{ task.due_date }}</td>
+                                    <td>
+                                        {% if task.slack <= 5 %}
+                                            <span class="badge bg-danger">{{ task.slack }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ task.slack }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> 
+                        Tasks highlighted in yellow have critical slack (≤ 5 time units).
+                    </div>
+                </div>
+                
+                <!-- Gantt Chart -->
+                {% if gantt_chart %}
+                <div class="gantt-container">
+                    <h5><i class="bi bi-bar-chart-line"></i> Gantt Chart</h5>
+                    <img src="data:image/png;base64,{{ gantt_chart }}" 
+                         alt="Gantt Chart" 
+                         class="img-fluid">
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Actions -->
+<div class="row mt-3">
+    <div class="col-12">
+        <a href="{% url 'schedule_detail' schedule.id %}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Schedule
+        </a>
+        <a href="{% url 'index' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-house"></i> Home
+        </a>
+        <a href="{% url 'export_pdf' schedule.id %}" class="btn btn-danger float-end">
+            <i class="bi bi-download"></i> Download PDF Report
+        </a>
+    </div>
+</div>
+{% endblock %}

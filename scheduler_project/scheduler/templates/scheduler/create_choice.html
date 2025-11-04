@@ -1,0 +1,64 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Create Schedule{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-plus-circle"></i> Create New Schedule
+            </div>
+            <div class="card-body">
+                <p class="lead text-center mb-4">Choose how you want to create your schedule:</p>
+                
+                <div class="row g-4">
+                    <!-- CSV Upload Option -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-primary">
+                            <div class="card-body text-center">
+                                <i class="bi bi-file-earmark-arrow-up text-primary" style="font-size: 4rem;"></i>
+                                <h3 class="mt-3">Upload CSV File</h3>
+                                <p class="text-muted">
+                                    Import tasks and machines from a CSV file. 
+                                    Perfect for large datasets or pre-existing data.
+                                </p>
+                                <a href="{% url 'upload_csv' %}" class="btn btn-primary btn-lg w-100">
+                                    <i class="bi bi-upload"></i> Upload CSV
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Entry Option -->
+                    <div class="col-md-6">
+                        <div class="card h-100 border-success">
+                            <div class="card-body text-center">
+                                <i class="bi bi-pencil-square text-success" style="font-size: 4rem;"></i>
+                                <h3 class="mt-3">Manual Entry</h3>
+                                <p class="text-muted">
+                                    Add tasks and machines one by one through forms. 
+                                    Great for small projects or custom configurations.
+                                </p>
+                                <a href="{% url 'manual_entry' %}" class="btn btn-success btn-lg w-100">
+                                    <i class="bi bi-pencil"></i> Manual Entry
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-light rounded">
+                    <h5><i class="bi bi-info-circle"></i> CSV File Format</h5>
+                    <p class="mb-2">Your CSV file should follow this structure:</p>
+                    <pre class="bg-white p-3 rounded border">task_name,duration,successors,release_date,due_date
+task_a_1,120,task_a_2,0,600
+task_a_2,20,none,0,600
+
+MACHINES,"m_1,m_2",,,</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

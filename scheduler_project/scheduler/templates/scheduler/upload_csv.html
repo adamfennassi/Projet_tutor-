@@ -1,0 +1,78 @@
+{% extends 'scheduler/base.html' %}
+
+{% block title %}Upload CSV{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-file-earmark-arrow-up"></i> Upload CSV File
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.schedule_name.id_for_label }}" class="form-label">
+                            <i class="bi bi-tag"></i> Schedule Name (Optional)
+                        </label>
+                        {{ form.schedule_name }}
+                        <small class="form-text text-muted">
+                            If not provided, an automatic name will be generated.
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">
+                            <i class="bi bi-file-earmark"></i> CSV File *
+                        </label>
+                        {{ form.file }}
+                        {% if form.file.errors %}
+                            <div class="text-danger">{{ form.file.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> CSV Format Requirements:</h6>
+                        <ul class="mb-0">
+                            <li>Header: task_name, duration, successors, release_date, due_date</li>
+                            <li>One task per line</li>
+                            <li>Use "none" for tasks without successors</li>
+                            <li>Last line should contain machines: MACHINES,"m_1,m_2,m_3",,,</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-upload"></i> Upload and Process
+                        </button>
+                        <a href="{% url 'create_choice' %}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Back
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Sample CSV Download -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5><i class="bi bi-download"></i> Need a sample CSV?</h5>
+                <p class="mb-2">Download one of the example datasets:</p>
+                <div class="btn-group" role="group">
+                    <a href="/media/samples/dataset_facile.csv" class="btn btn-outline-success btn-sm" download>
+                        <i class="bi bi-download"></i> Easy
+                    </a>
+                    <a href="/media/samples/dataset_moyen.csv" class="btn btn-outline-warning btn-sm" download>
+                        <i class="bi bi-download"></i> Medium
+                    </a>
+                    <a href="/media/samples/dataset_difficile.csv" class="btn btn-outline-danger btn-sm" download>
+                        <i class="bi bi-download"></i> Hard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
