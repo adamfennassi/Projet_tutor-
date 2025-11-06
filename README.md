@@ -1,98 +1,94 @@
-# Ordonnancement sur Machines Parallèles Non-Reliées
-# Parallel Machine Scheduling Solver
+# Ordonnancement sur Machines Parallèles
 
-## 🎯 Vue d'Ensemble / Overview
-Ce projet fournit une solution complète pour l'optimisation de l'ordonnancement sur machines parallèles non-reliées utilisant le solveur CP-SAT de Google OR-Tools, avec des outils d'analyse complets et des capacités de génération de jeux de données.
+## Vue d'ensemble
+Projet d'optimisation d'ordonnancement sur machines parallèles utilisant le solveur CP-SAT de Google OR-Tools. Comprend un générateur de jeux de données et des outils d'analyse.
 
-This project provides a complete solution for parallel machine scheduling optimization using Google OR-Tools CP-SAT solver, with comprehensive analysis tools and dataset generation capabilities.
+## Fichiers du projet
 
-## 📁 Fichiers du Projet / Project Files
+### 1. model_machine_parallele.ipynb
+Notebook principal contenant la classe Machine_Parallele avec toutes les méthodes.
 
-### 1. **model_machine_parallele.ipynb**
-Notebook principal contenant la classe `Machine_Parallele` avec toutes les méthodes.
-Main notebook containing the `Machine_Parallele` solver class with all methods.
+#### Méthodes disponibles :
 
-#### Méthodes Disponibles / Available Methods:
+Solveur principal
+- __init__() - Initialiser et résoudre le problème
 
-**Solveur Principal / Core Solver:**
-- `__init__()` - Initialiser et résoudre le problème / Initialize and solve the scheduling problem
+Récupération de données
+- get_schedule() - Obtenir les informations complètes
+- get_machine_utilization() - Calculer l'utilisation des machines
+- get_critical_path() - Identifier les tâches critiques
+- get_makespan() - Obtenir la durée totale
 
-**Récupération de Données / Data Retrieval:**
-- `get_schedule()` - Obtenir les informations complètes / Get complete scheduling information
-- `get_machine_utilization()` - Calculer l'utilisation des machines / Calculate machine utilization stats
-- `get_critical_path()` - Identifier les tâches critiques / Identify critical tasks
-- `get_makespan()` - Obtenir la durée totale / Get total project completion time
+Analyse et rapports
+- print_start_date() - Afficher les dates de début
+- print_machine_assignments() - Afficher l'affectation tâches-machines
+- print_order() - Afficher l'ordre chronologique
+- print_utilization() - Afficher l'utilisation des machines
+- print_critical_tasks() - Afficher les tâches critiques
+- print_summary() - Rapport complet
 
-**Analyse et Rapports / Analysis & Reporting:**
-- `print_start_date()` - Afficher les dates de début / Print start times for all tasks
-- `print_machine_assignments()` - Afficher l'affectation tâches-machines / Show task-to-machine assignments
-- `print_order()` - Afficher l'ordre chronologique / Display chronological execution order
-- `print_utilization()` - Afficher l'utilisation des machines / Print machine utilization statistics
-- `print_critical_tasks()` - Afficher les tâches critiques / Show tasks with low slack
-- `print_summary()` - Rapport complet / Comprehensive report of all metrics
+Export et visualisation
+- export_to_dataframe() - Exporter vers pandas DataFrame
+- visualize_gantt() - Créer un diagramme de Gantt
 
-**Export et Visualisation / Export & Visualization:**
-- `export_to_dataframe()` - Exporter vers pandas DataFrame / Export schedule to pandas DataFrame
-- `visualize_gantt()` - Créer un diagramme de Gantt / Create Gantt chart visualization
+### 2. generator.py
+Générateur de jeux de données pour créer des cas de test et des benchmarks.
 
-### 2. **generator.py**
-Dataset generator for creating test cases and benchmarks.
+#### Classe SchedulingDatasetGenerator - Méthodes :
 
-#### `SchedulingDatasetGenerator` Class Methods:
+- generate_task_pair() - Générer une paire prédécesseur-successeur
+- generate_dataset() - Générer un jeu de données complet
+- tasks_to_csv() - Exporter vers fichier CSV
+- load_from_csv() - Charger depuis un fichier CSV
+- generate_multiple_datasets() - Générer plusieurs jeux de données
+- print_dataset_stats() - Afficher les statistiques
 
-- `generate_task_pair()` - Generate a single predecessor-successor task pair
-- `generate_dataset()` - Generate complete dataset with multiple task pairs
-- `tasks_to_csv()` - Export dataset to CSV file
-- `load_from_csv()` - Load dataset from CSV file
-- `generate_multiple_datasets()` - Batch generate datasets
-- `print_dataset_stats()` - Display dataset statistics
+#### Paramètres :
+- num_pairs - Nombre de paires de tâches (total tâches = paires × 2)
+- num_machines - Nombre de machines disponibles
+- min_duration / max_duration - Plage de durée des tâches
+- time_horizon - Fenêtre temporelle totale
+- slack_factor - Marge (0.0=serré, 1.0=lâche)
 
-#### Parameters:
-- `num_pairs` - Number of task pairs (total tasks = pairs × 2)
-- `num_machines` - Number of available machines
-- `min_duration` / `max_duration` - Task duration range
-- `time_horizon` - Total time window
-- `slack_factor` - Deadline tightness (0.0=tight, 1.0=loose)
+### 3. Fichiers supports
 
-### 3. **Supporting Files**
+- quick_example.py - Exemple d'intégration rapide
+- test_solver_with_generated_data.py - Script de test complet
+- USAGE_GUIDE.md - Documentation détaillée
 
-- `quick_example.py` - Quick integration example
-- `test_solver_with_generated_data.py` - Comprehensive testing script
-- `USAGE_GUIDE.md` - Detailed usage documentation
+## Démarrage rapide
 
-## 🚀 Quick Start
-
-### Basic Usage
+### Utilisation de base
 
 ```python
 from ortools.sat.python import cp_model
 from collections import namedtuple
 from generator import SchedulingDatasetGenerator
 
-# Create taskInfo namedtuple
+# Créer taskInfo namedtuple
 taskInfo = namedtuple("taskInfo", ["duration", "predecessors", "relase_date", "due_date"])
 
-# Generate dataset
+# Générer un jeu de données
 generator = SchedulingDatasetGenerator(seed=42)
 tasks, machines = generator.generate_dataset(num_pairs=5, num_machines=3)
 
-# Solve
+# Résoudre
 solver = Machine_Parallele(taskInfo, tasks, machines)
 
-# View results
+# Voir les résultats
 solver.print_summary()
 ```
 
-### Generate and Save Datasets
+### Générer et sauvegarder des jeux de données
 
 ```python
 generator = SchedulingDatasetGenerator()
 
-# Single dataset
+# Jeu de données unique
 tasks, machines = generator.generate_dataset(num_pairs=4, num_machines=2)
 generator.tasks_to_csv(tasks, machines, "my_dataset.csv")
 
-# Multiple datasets
+# Plusieurs jeux de données
 generator.generate_multiple_datasets(
     num_datasets=10,
     base_filename="test",
@@ -101,20 +97,20 @@ generator.generate_multiple_datasets(
 )
 ```
 
-### Load from CSV
+### Charger depuis CSV
 
 ```python
-# Load dataset
+# Charger un jeu de données
 tasks, machines = generator.load_from_csv("dataset.csv")
 
-# Solve
+# Résoudre
 solver = Machine_Parallele(taskInfo, tasks, machines)
 solver.print_summary()
 ```
 
-## 📊 Dataset Difficulty Levels
+## Niveaux de difficulté des jeux de données
 
-### Easy (High Success Rate)
+### Facile (taux de succès élevé)
 ```python
 tasks, machines = generator.generate_dataset(
     num_pairs=3,
@@ -123,7 +119,7 @@ tasks, machines = generator.generate_dataset(
 )
 ```
 
-### Medium (Moderate Challenge)
+### Moyen (défi modéré)
 ```python
 tasks, machines = generator.generate_dataset(
     num_pairs=5,
@@ -132,7 +128,7 @@ tasks, machines = generator.generate_dataset(
 )
 ```
 
-### Hard (Challenging)
+### Difficile
 ```python
 tasks, machines = generator.generate_dataset(
     num_pairs=8,
@@ -141,24 +137,24 @@ tasks, machines = generator.generate_dataset(
 )
 ```
 
-## 📈 Analysis Features
+## Fonctionnalités d'analyse
 
-### Machine Utilization
-Shows how efficiently machines are being used:
-- Total work time per machine
-- Idle time per machine
-- Utilization percentage
+### Utilisation des machines
+Mesure l'efficacité d'utilisation des machines :
+- Temps de travail total par machine
+- Temps d'inactivité par machine
+- Pourcentage d'utilisation
 
-### Critical Path Analysis
-Identifies tasks with minimal slack (at risk of delays)
+### Analyse du chemin critique
+Identifie les tâches avec marge minimale (risque de retard)
 
-### Gantt Chart Visualization
-Visual timeline of task execution across machines
+### Visualisation Gantt
+Chronologie visuelle de l'exécution des tâches sur les machines
 
-### Export to DataFrame
-Export results for further analysis or machine learning
+### Export vers DataFrame
+Export des résultats pour analyse ou machine learning
 
-## 💾 CSV Format
+## Format CSV
 
 ```csv
 task_name,duration,predecessors,release_date,due_date
@@ -168,83 +164,85 @@ task_a_2,34,none,12,164
 MACHINES,"m_1,m_2,m_3",,,
 ```
 
-## 🔧 Requirements
+## Prérequis
 
 ```bash
 pip install ortools pandas matplotlib
 ```
 
-## 📝 Example Workflow
+## Exemple de flux de travail
 
-1. **Generate Test Data**
+1. Générer des données de test
    ```bash
    python generator.py
    ```
 
-2. **Load in Notebook**
+2. Charger dans le notebook
    ```python
    tasks, machines = generator.load_from_csv("dataset.csv")
    ```
 
-3. **Solve Problem**
+3. Résoudre le problème
    ```python
    solver = Machine_Parallele(taskInfo, tasks, machines)
    ```
 
-4. **Analyze Results**
+4. Analyser les résultats
    ```python
    solver.print_summary()
    solver.visualize_gantt()
    df = solver.export_to_dataframe()
    ```
 
-## 🎓 Use Cases
+## Cas d'utilisation
 
-1. **Testing Solver Performance** - Generate diverse datasets to benchmark
-2. **Machine Learning** - Export results to train ML models
-3. **Production Planning** - Real-world scheduling optimization
-4. **Academic Research** - Reproducible scheduling experiments
-5. **Algorithm Comparison** - Compare different scheduling approaches
+1. Tests de performance du solveur - Générer divers jeux de données pour benchmarker
+2. Machine Learning - Exporter les résultats pour entraîner des modèles ML
+3. Planification de production - Optimisation réelle d'ordonnancement
+4. Recherche académique - Expériences d'ordonnancement reproductibles
+5. Comparaison d'algorithmes - Comparer différentes approches d'ordonnancement
 
-## 📚 Key Concepts
+## Concepts clés
 
-### Task Pairs
-Each dataset consists of task pairs where:
-- Task 2 is the predecessor (no dependencies)
-- Task 1 is the successor (depends on Task 2)
-- This models real-world scenarios like setup→execution, prep→processing, etc.
+### Paires de tâches
+Chaque jeu de données se compose de paires de tâches où :
+- Tâche 2 est le prédécesseur (sans dépendances)
+- Tâche 1 est le successeur (dépend de Tâche 2)
+- Modélise des scénarios réels comme préparation→exécution, setup→traitement
 
-### Constraints
-- **Release Date**: Earliest start time
-- **Due Date**: Latest completion time
-- **Precedence**: Successors wait for predecessors
-- **No Overlap**: One task per machine at a time
-- **Machine Assignment**: Each task assigned to exactly one machine
+### Contraintes
+- Release Date : date de début au plus tôt
+- Due Date : date d'achèvement au plus tard
+- Précédence : les successeurs attendent les prédécesseurs
+- Non-chevauchement : une tâche par machine à la fois
+- Affectation machine : chaque tâche assignée à exactement une machine
 
-### Optimization Objective
-Minimize the sum of start times (encourages early completion)
+### Fonction objectif
+Minimiser la somme des dates de début (encourage achèvement précoce)
 
-## 🔍 Troubleshooting
+## Dépannage
 
-**No Feasible Solution Found?**
-- Increase `slack_factor`
-- Add more machines
-- Reduce number of task pairs
-- Increase `time_horizon`
+Aucune solution réalisable trouvée ?
+- Augmenter slack_factor
+- Ajouter plus de machines
+- Réduire le nombre de paires de tâches
+- Augmenter time_horizon
 
-**Too Easy?**
-- Decrease `slack_factor`
-- Reduce number of machines
-- Increase number of task pairs
+Trop facile ?
+- Diminuer slack_factor
+- Réduire le nombre de machines
+- Augmenter le nombre de paires de tâches
 
-## 📧 Next Steps
+## Prochaines étapes
 
-1. Run `python generator.py` to see example output
-2. Open `model_machine_parallele.ipynb` to test the solver
-3. Read `USAGE_GUIDE.md` for detailed documentation
-4. Run `quick_example.py` for integration examples
-5. Use `test_solver_with_generated_data.py` for comprehensive testing
+1. Exécuter python generator.py pour voir la sortie exemple
+2. Ouvrir model_machine_parallele.ipynb pour tester le solveur
+3. Lire USAGE_GUIDE.md pour la documentation détaillée
+4. Exécuter quick_example.py pour des exemples d'intégration
+5. Utiliser test_solver_with_generated_data.py pour les tests complets
 
 ---
 
-**Happy Scheduling! 🎉**
+Version : 1.0
+Dernière mise à jour : Novembre 2025
+

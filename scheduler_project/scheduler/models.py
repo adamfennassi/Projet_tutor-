@@ -1,5 +1,5 @@
 """
-Database Models for Task Scheduler
+Modèles de base de données pour le planificateur de tâches
 """
 from django.db import models
 from django.utils import timezone
@@ -7,22 +7,22 @@ from django.utils import timezone
 
 class Schedule(models.Model):
     """
-    Represents a scheduling session/project
+    Représente une session d'ordonnancement / un projet
     """
     name = models.CharField(max_length=200, default="Schedule")
     created_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(
         max_length=20,
         choices=[
-            ('pending', 'Pending'),
-            ('solved', 'Solved'),
-            ('no_solution', 'No Solution'),
-            ('error', 'Error')
+            ('pending', 'En attente'),
+            ('solved', 'Résolu'),
+            ('no_solution', 'Aucune solution'),
+            ('error', 'Erreur')
         ],
         default='pending'
     )
-    makespan = models.IntegerField(null=True, blank=True)
-    objective_value = models.FloatField(null=True, blank=True)
+    makespan = models.IntegerField(null=True, blank=True)  # Durée totale du projet
+    objective_value = models.FloatField(null=True, blank=True)  # Valeur de la fonction objectif
     
     class Meta:
         ordering = ['-created_at']
@@ -33,7 +33,7 @@ class Schedule(models.Model):
 
 class Machine(models.Model):
     """
-    Represents a machine
+    Représente une machine
     """
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='machines')
     name = models.CharField(max_length=100)
@@ -47,16 +47,16 @@ class Machine(models.Model):
 
 class Task(models.Model):
     """
-    Represents a task to be scheduled
+    Représente une tâche à ordonnancer
     """
     schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name='tasks')
     name = models.CharField(max_length=100)
-    duration = models.IntegerField()
-    successor_name = models.CharField(max_length=100, blank=True, default='none')
-    release_date = models.IntegerField(default=0)
-    due_date = models.IntegerField()
+    duration = models.IntegerField()  # Durée d'exécution
+    successor_name = models.CharField(max_length=100, blank=True, default='none')  # Nom du successeur
+    release_date = models.IntegerField(default=0)  # Date de disponibilité
+    due_date = models.IntegerField()  # Date d'échéance
     
-    # Solution fields (filled after solving)
+    # Champs de solution (remplis après résolution)
     assigned_machine = models.ForeignKey(
         Machine, 
         on_delete=models.SET_NULL, 
@@ -64,24 +64,24 @@ class Task(models.Model):
         blank=True,
         related_name='assigned_tasks'
     )
-    start_time = models.IntegerField(null=True, blank=True)
-    end_time = models.IntegerField(null=True, blank=True)
-    slack = models.IntegerField(null=True, blank=True)
+    start_time = models.IntegerField(null=True, blank=True)  # Date de début calculée
+    end_time = models.IntegerField(null=True, blank=True)  # Date de fin calculée
+    slack = models.IntegerField(null=True, blank=True)  # Marge avant l'échéance
     
     class Meta:
         ordering = ['name']
     
     def __str__(self):
-        return f"{self.name} (Duration: {self.duration})"
+        return f"{self.name} (Durée: {self.duration})"
 
 
 class UploadedFile(models.Model):
     """
-    Stores uploaded CSV files
+    Stocke les fichiers CSV téléchargés
     """
     schedule = models.OneToOneField(Schedule, on_delete=models.CASCADE, related_name='uploaded_file')
     file = models.FileField(upload_to='uploads/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return f"File for {self.schedule.name}"
+        return f"Fichier pour {self.schedule.name}"

@@ -1,5 +1,5 @@
 """
-Forms for Task Scheduler
+Formulaires pour le planificateur de tâches
 """
 from django import forms
 from .models import Task, Machine, UploadedFile
@@ -7,14 +7,14 @@ from .models import Task, Machine, UploadedFile
 
 class CSVUploadForm(forms.ModelForm):
     """
-    Form for uploading CSV files
+    Formulaire pour télécharger des fichiers CSV
     """
     schedule_name = forms.CharField(
         max_length=200, 
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter schedule name (optional)'
+            'placeholder': 'Entrez le nom du planning (optionnel)'
         })
     )
     
@@ -31,7 +31,7 @@ class CSVUploadForm(forms.ModelForm):
 
 class MachineForm(forms.ModelForm):
     """
-    Form for adding machines manually
+    Formulaire pour ajouter des machines manuellement
     """
     class Meta:
         model = Machine
@@ -39,14 +39,14 @@ class MachineForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'e.g., m_1, Machine A'
+                'placeholder': 'ex: m_1, Machine A'
             })
         }
 
 
 class TaskForm(forms.ModelForm):
     """
-    Form for adding tasks manually
+    Formulaire pour ajouter des tâches manuellement
     """
     class Meta:
         model = Task
@@ -54,43 +54,44 @@ class TaskForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'e.g., task_a_1'
+                'placeholder': 'ex: task_a_1'
             }),
             'duration': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '1',
-                'placeholder': 'Task duration'
+                'placeholder': 'Durée de la tâche'
             }),
             'successor_name': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'none or successor task name'
+                'placeholder': 'none ou nom de la tâche successeur'
             }),
             'release_date': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '0',
                 'value': '0',
-                'placeholder': 'Release date'
+                'placeholder': 'Date de disponibilité'
             }),
             'due_date': forms.NumberInput(attrs={
                 'class': 'form-control',
                 'min': '1',
-                'placeholder': 'Due date'
+                'placeholder': "Date d'échéance"
             }),
         }
     
     def clean_successor_name(self):
+        """Nettoie et valide le nom du successeur"""
         successor = self.cleaned_data.get('successor_name', '').strip()
         return successor if successor else 'none'
 
 
 class ScheduleNameForm(forms.Form):
     """
-    Simple form for naming a schedule
+    Formulaire simple pour nommer un planning
     """
     name = forms.CharField(
         max_length=200,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Enter schedule name'
+            'placeholder': 'Entrez le nom du planning'
         })
     )

@@ -1,5 +1,5 @@
 """
-Views for Task Scheduler Application
+Vues pour l'application de planification de tâches
 """
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -13,7 +13,7 @@ import os
 
 def index(request):
     """
-    Home page - shows list of schedules
+    Page d'accueil - affiche la liste des plannings
     """
     schedules = Schedule.objects.all()
     return render(request, 'scheduler/index.html', {'schedules': schedules})
@@ -21,41 +21,41 @@ def index(request):
 
 def create_schedule_choice(request):
     """
-    Choose how to create a schedule (CSV upload or manual entry)
+    Choisir comment créer un planning (téléchargement CSV ou saisie manuelle)
     """
     return render(request, 'scheduler/create_choice.html')
 
 
 def upload_csv(request):
     """
-    Upload CSV file to create a schedule
+    Télécharger un fichier CSV pour créer un planning
     """
     if request.method == 'POST':
         form = CSVUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            # Create schedule
-            schedule_name = form.cleaned_data.get('schedule_name') or f"Schedule {Schedule.objects.count() + 1}"
+            # Créer le planning
+            schedule_name = form.cleaned_data.get('schedule_name') or f"Planning {Schedule.objects.count() + 1}"
             schedule = Schedule.objects.create(name=schedule_name)
             
-            # Save uploaded file
+            # Sauvegarder le fichier téléchargé
             uploaded_file = form.save(commit=False)
             uploaded_file.schedule = schedule
             uploaded_file.save()
             
-            # Parse CSV
+            # Parser le CSV
             file_path = uploaded_file.file.path
             tasks_dict, machines_list = parse_csv_file(file_path)
             
             if tasks_dict is None or machines_list is None:
-                messages.error(request, "Error parsing CSV file. Please check the format.")
+                messages.error(request, "Erreur lors de l'analyse du fichier CSV. Veuillez vérifier le format.")
                 schedule.delete()
                 return redirect('upload_csv')
             
-            # Create machines
+            # Créer les machines
             for machine_name in machines_list:
                 Machine.objects.create(schedule=schedule, name=machine_name.strip())
             
-            # Create tasks
+            # Créer les tâches
             for task_name, task_data in tasks_dict.items():
                 Task.objects.create(
                     schedule=schedule,
@@ -66,7 +66,7 @@ def upload_csv(request):
                     due_date=task_data['due_date']
                 )
             
-            messages.success(request, f"CSV uploaded successfully! {len(tasks_dict)} tasks and {len(machines_list)} machines loaded.")
+            messages.success(request, f"CSV téléchargé avec succès ! {len(tasks_dict)} tâches et {len(machines_list)} machines chargées.")
             return redirect('schedule_detail', schedule_id=schedule.id)
     else:
         form = CSVUploadForm()
@@ -76,14 +76,14 @@ def upload_csv(request):
 
 def manual_entry(request):
     """
-    Create schedule manually
+    Créer un planning manuellement
     """
     if request.method == 'POST':
         name_form = ScheduleNameForm(request.POST)
         if name_form.is_valid():
             schedule_name = name_form.cleaned_data['name']
             schedule = Schedule.objects.create(name=schedule_name)
-            messages.success(request, f"Schedule '{schedule_name}' created. Now add machines and tasks.")
+            messages.success(request, f"Planning '{schedule_name}' créé. Ajoutez maintenant les machines et les tâches.")
             return redirect('add_machines', schedule_id=schedule.id)
     else:
         name_form = ScheduleNameForm()
@@ -93,7 +93,7 @@ def manual_entry(request):
 
 def add_machines(request, schedule_id):
     """
-    Add machines to a schedule
+    Ajouter des machines à un planning
     """
     schedule = get_object_or_404(Schedule, id=schedule_id)
     
@@ -104,12 +104,12 @@ def add_machines(request, schedule_id):
                 machine = form.save(commit=False)
                 machine.schedule = schedule
                 machine.save()
-                messages.success(request, f"Machine '{machine.name}' added.")
+                messages.success(request, f"Machine '{machine.name}' ajoutée.")
                 return redirect('add_machines', schedule_id=schedule.id)
         
         elif 'done' in request.POST:
             if schedule.machines.count() == 0:
-                messages.error(request, "Please add at least one machine.")
+                messages.error(request, "Veuillez ajouter au moins une machine.")
             else:
                 return redirect('add_tasks', schedule_id=schedule.id)
     
@@ -125,17 +125,17 @@ def add_machines(request, schedule_id):
 
 def delete_machine(request, schedule_id, machine_id):
     """
-    Delete a machine from a schedule
+    Supprimer une machine d'un planning
     """
     machine = get_object_or_404(Machine, id=machine_id, schedule_id=schedule_id)
     machine.delete()
-    messages.success(request, "Machine deleted.")
+    messages.success(request, "Machine supprimée.")
     return redirect('add_machines', schedule_id=schedule_id)
 
 
 def add_tasks(request, schedule_id):
     """
-    Add tasks to a schedule
+    Ajouter des tâches à un planning
     """
     schedule = get_object_or_404(Schedule, id=schedule_id)
     
@@ -146,12 +146,12 @@ def add_tasks(request, schedule_id):
                 task = form.save(commit=False)
                 task.schedule = schedule
                 task.save()
-                messages.success(request, f"Task '{task.name}' added.")
+                messages.success(request, f"Tâche '{task.name}' ajoutée.")
                 return redirect('add_tasks', schedule_id=schedule.id)
         
         elif 'done' in request.POST:
             if schedule.tasks.count() == 0:
-                messages.error(request, "Please add at least one task.")
+                messages.error(request, "Veuillez ajouter au moins une tâche.")
             else:
                 return redirect('schedule_detail', schedule_id=schedule.id)
     
@@ -167,17 +167,17 @@ def add_tasks(request, schedule_id):
 
 def delete_task(request, schedule_id, task_id):
     """
-    Delete a task from a schedule
+    Supprimer une tâche d'un planning
     """
     task = get_object_or_404(Task, id=task_id, schedule_id=schedule_id)
     task.delete()
-    messages.success(request, "Task deleted.")
+    messages.success(request, "Tâche supprimée.")
     return redirect('add_tasks', schedule_id=schedule_id)
 
 
 def schedule_detail(request, schedule_id):
     """
-    View schedule details
+    Afficher les détails d'un planning
     """
     schedule = get_object_or_404(Schedule, id=schedule_id)
     tasks = schedule.tasks.all()
@@ -192,7 +192,7 @@ def schedule_detail(request, schedule_id):
 
 def solve(request, schedule_id):
     """
-    Solve the scheduling problem
+    Résoudre le problème d'ordonnancement
     """
     schedule = get_object_or_404(Schedule, id=schedule_id)
     
@@ -208,21 +208,21 @@ def solve(request, schedule_id):
 
 def results(request, schedule_id):
     """
-    View scheduling results with Gantt chart
+    Afficher les résultats de l'ordonnancement avec le diagramme de Gantt
     """
     schedule = get_object_or_404(Schedule, id=schedule_id)
     
     if schedule.status != 'solved':
-        messages.warning(request, "This schedule has not been solved yet.")
+        messages.warning(request, "Ce planning n'a pas encore été résolu.")
         return redirect('schedule_detail', schedule_id=schedule_id)
     
-    # Re-solve to get the Gantt chart
+    # Re-résoudre pour obtenir le diagramme de Gantt
     success, message, gantt_chart = solve_schedule(schedule_id)
     
     tasks = schedule.tasks.all().order_by('start_time')
     machines = schedule.machines.all()
     
-    # Group tasks by machine
+    # Grouper les tâches par machine
     machine_assignments = {}
     for machine in machines:
         machine_assignments[machine.name] = tasks.filter(assigned_machine=machine).order_by('start_time')
@@ -238,31 +238,31 @@ def results(request, schedule_id):
 
 def export_pdf(request, schedule_id):
     """
-    Export schedule results as PDF
+    Exporter les résultats du planning en PDF
     """
     schedule = get_object_or_404(Schedule, id=schedule_id)
     
     if schedule.status != 'solved':
-        messages.error(request, "Cannot export unsolved schedule.")
+        messages.error(request, "Impossible d'exporter un planning non résolu.")
         return redirect('schedule_detail', schedule_id=schedule_id)
     
-    # Generate Gantt chart
+    # Générer le diagramme de Gantt
     success, message, gantt_chart = solve_schedule(schedule_id)
     
-    # Generate PDF
+    # Générer le PDF
     pdf_buffer = generate_pdf_report(schedule, gantt_chart)
     
     response = HttpResponse(pdf_buffer.getvalue(), content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="schedule_{schedule.id}_{schedule.name}.pdf"'
+    response['Content-Disposition'] = f'attachment; filename="planning_{schedule.id}_{schedule.name}.pdf"'
     
     return response
 
 
 def delete_schedule(request, schedule_id):
     """
-    Delete a schedule
+    Supprimer un planning
     """
     schedule = get_object_or_404(Schedule, id=schedule_id)
     schedule.delete()
-    messages.success(request, "Schedule deleted.")
+    messages.success(request, "Planning supprimé.")
     return redirect('index')

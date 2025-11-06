@@ -1,0 +1,18 @@
+Tâches Communes
+- Configuration de l'environnement de développement
+- Mise en place de la base de données
+- Tests de l'application
+- Documentation du projet
+- Préparation des jeux de données de test
+
+Groupe 1
+- Développement des modèles de données
+- Implémentation du solveur d'optimisation
+- Gestion de l'import des fichiers CSV
+- Validation des données d'entrée
+
+Groupe 2
+- Création de l'interface utilisateur
+- Développement des formulaires
+- Implémentation de la navigation
+- Génération des rapports et exports

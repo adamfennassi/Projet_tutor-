@@ -1,5 +1,5 @@
 """
-URL Configuration for Scheduler App
+Configuration des URLs pour l'application Scheduler
 """
 from django.urls import path
 from . import views

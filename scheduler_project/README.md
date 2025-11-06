@@ -1,92 +1,184 @@
-# Task Scheduler Web Application
+# Planificateur de Tâches - Ordonnancement sur Machines Parallèles
 
-A professional Django web application for parallel machine scheduling optimization using Google OR-Tools CP-SAT solver.
+Application web Django pour l'optimisation d'ordonnancement sur machines parallèles utilisant le solveur CP-SAT de Google OR-Tools.
 
-## 🎯 Features
+---
 
-- **CSV Import**: Upload CSV files with task and machine data
-- **Manual Entry**: Add tasks and machines through interactive forms
-- **Solver Integration**: Solve scheduling problems using OR-Tools CP-SAT
-- **Gantt Chart Visualization**: Visual timeline of task execution
-- **PDF Export**: Generate comprehensive PDF reports with charts
-- **Responsive UI**: Modern Bootstrap 5 interface
-- **Real-time Statistics**: View makespan, utilization, and critical tasks
+## Table des Matières
 
-## 📁 Project Structure
+1. [Vue d'ensemble](#vue-densemble)  
+2. [Architecture du Projet](#architecture-du-projet)  
+3. [Logique et Méthodes](#logique-et-méthodes)  
+4. [Installation](#installation)  
+5. [Utilisation](#utilisation)  
+6. [Structure de la Base de Données](#structure-de-la-base-de-données)  
+7. [Format CSV](#format-csv)  
+8. [Personnalisation](#personnalisation)  
+9. [Dépannage](#dépannage)  
+10. [Performance](#performance)
+
+---
+
+## Vue d'Ensemble
+
+Application web développée dans le cadre d'un projet tuteuré, permettant de résoudre des problèmes d'ordonnancement sur machines parallèles. Elle utilise le solveur CP-SAT de Google OR-Tools pour trouver des solutions optimales.
+
+### Fonctionnalités Principales
+
+- Import de fichiers CSV avec tâches et machines
+- Saisie manuelle via formulaires
+- Résolution automatique avec OR-Tools
+- Visualisation graphique des résultats
+- Export des rapports en PDF
+- Interface web responsive  
+
+### Technologies Utilisées
+
+| Technologie | Version | Utilisation |
+|--------------|----------|-------------|
+| Django | 4.2+ | Framework web |
+| OR-Tools | 9.7+ | Solveur d’optimisation |
+| Bootstrap | 5.3 | Interface utilisateur |
+| Matplotlib | 3.7+ | Graphiques Gantt |
+| ReportLab | 4.0+ | Export PDF |
+| Pandas | 2.0+ | Manipulation de données |
+| SQLite | 3 | Base de données par défaut |
+
+---
+
+## Architecture du Projet
 
 ```
 scheduler_project/
-├── config/                 # Django project settings
+├── config/
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
-├── scheduler/             # Main application
-│   ├── models.py          # Database models
-│   ├── views.py           # View controllers
-│   ├── forms.py           # Form definitions
-│   ├── solver.py          # OR-Tools solver integration
-│   ├── pdf_export.py      # PDF generation
-│   ├── urls.py            # URL routes
-│   ├── admin.py           # Admin configuration
-│   └── templates/         # HTML templates
-│       └── scheduler/
-├── media/                 # Uploaded files
-├── manage.py              # Django management script
-└── requirements.txt       # Python dependencies
+├── scheduler/
+│   ├── admin.py
+│   ├── apps.py
+│   ├── forms.py
+│   ├── models.py
+│   ├── solver.py
+│   ├── pdf_export.py
+│   ├── views.py
+│   ├── urls.py
+│   └── templates/scheduler/
+│       ├── base.html
+│       ├── index.html
+│       ├── upload_csv.html
+│       ├── manual_entry.html
+│       ├── add_machines.html
+│       ├── add_tasks.html
+│       ├── schedule_detail.html
+│       └── results.html
+├── media/
+│   ├── uploads/
+│   └── samples/
+├── manage.py
+└── requirements.txt
 ```
 
-## 🚀 Installation & Setup
+---
 
-### Step 1: Install Dependencies
+## Logique et Méthodes
+
+### Modèle de Données
+
+**Schedule (Planning)**  
+- name, created_at, status, makespan, objective_value  
+- Relations : machines (1-N), tasks (1-N), uploaded_file (1-1)
+
+**Machine**  
+- name, schedule (FK)  
+- assigned_tasks (post-résolution)
+
+**Task**  
+- name, duration, successor_name, release_date, due_date  
+- assigned_machine, start_time, end_time, slack
+
+### Solveur (scheduler/solver.py)
+
+Le modèle utilise la **programmation par contraintes** via OR-Tools CP-SAT :
+- Variables : start_time, affectation binaire tâche → machine  
+- Contraintes :  
+  - affectation unique  
+  - non-chevauchement  
+  - précédence (fin prédécesseur ≤ début successeur)  
+  - respect des fenêtres temporelles  
+- Objectif : minimiser la somme des dates de début (favorise la compacité et la réduction du makespan)
+
+---
+
+## Installation
+
+### Prérequis
+- Python 3.8+  
+- pip
+
+### Étapes d'installation
 
 ```powershell
-# Navigate to project directory
-cd "c:\Users\oussa\Desktop\Projet tut\scheduler_project"
+# Naviguer vers le dossier du projet
+cd "chemin/vers/scheduler_project"
 
-# Install required packages
+# Installer les dépendances
 pip install -r requirements.txt
-```
 
-### Step 2: Initialize Database
-
-```powershell
-# Create database tables
-python manage.py makemigrations
+# Initialiser la base de données
+python manage.py makemigrations scheduler
 python manage.py migrate
-```
 
-### Step 3: Create Admin User (Optional)
-
-```powershell
-python manage.py createsuperuser
-```
-
-### Step 4: Run Development Server
-
-```powershell
+# Démarrer le serveur
 python manage.py runserver
 ```
 
-The application will be available at: **http://127.0.0.1:8000/**
+**Accès à l'application :**
+- Application : http://127.0.0.1:8000/
+- Interface admin : http://127.0.0.1:8000/admin/ (optionnel)
 
-## 📖 Usage Guide
+---
 
-### 1. Create a Schedule
+## Utilisation
 
-**Option A: Upload CSV File**
-- Click "Create New Schedule" → "Upload CSV File"
-- Select your CSV file (see format below)
-- The system will automatically import tasks and machines
+### Créer un Planning via CSV
+1. Créer un nouveau planning  
+2. Télécharger un fichier CSV  
+3. Cliquer sur "Télécharger et traiter"  
+4. Résoudre le planning  
+5. Visualiser les résultats et exporter en PDF
 
-**Option B: Manual Entry**
-- Click "Create New Schedule" → "Manual Entry"
-- Enter schedule name
-- Add machines one by one
-- Add tasks with their parameters
+### Créer un Planning Manuellement
+1. Créer un planning  
+2. Saisir le nom  
+3. Ajouter les machines  
+4. Ajouter les tâches  
+5. Lancer la résolution  
+6. Consulter les résultats
 
-### 2. CSV File Format
+### Interpréter les Résultats
+- **Makespan** : durée totale du projet  
+- **Valeur objectif** : somme des dates de début  
+- **Slack** : marge avant l’échéance  
+  - Vert (>5) : confortable  
+  - Rouge (≤5) : critique
 
-Your CSV should follow this structure:
+---
+
+## Structure de la Base de Données
+
+```
+Schedule (1) ──< (*) Machine
+Schedule (1) ──< (*) Task
+Schedule (1) ──< (1) UploadedFile
+Task (*) ──> (1) Machine
+```
+
+---
+
+## Format CSV
+
+### Structure
 
 ```csv
 task_name,duration,successors,release_date,due_date
@@ -98,172 +190,62 @@ task_b_2,120,none,0,600
 MACHINES,"m_a,m_b",,,
 ```
 
-**Important:**
-- Header row must include: `task_name,duration,successors,release_date,due_date`
-- Use `none` for tasks without successors
-- Machines line: `MACHINES,"machine1,machine2,machine3",,,`
-- Leave a blank line before the MACHINES row
-
-### 3. Solve the Schedule
-
-- Open your schedule
-- Click "Solve Schedule"
-- The solver will compute optimal task assignments
-- View results with Gantt chart
-
-### 4. Export Results
-
-- From the results page, click "Export as PDF"
-- Download a comprehensive report including:
-  - Schedule summary
-  - Machine assignments
-  - Task details table
-  - Gantt chart visualization
-
-## 🔧 Configuration
-
-### Database
-The project uses SQLite by default. To use PostgreSQL or MySQL, edit `config/settings.py`:
-
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'scheduler_db',
-        'USER': 'your_user',
-        'PASSWORD': 'your_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-```
-
-### Static Files
-For production deployment:
-
-```powershell
-python manage.py collectstatic
-```
-
-## 📊 Understanding Results
-
-### Makespan
-Total project completion time (maximum end time across all tasks)
-
-### Objective Value
-Sum of all task start times (minimized by the solver)
-
-### Slack
-Time buffer between task completion and due date
-- **Green badge (>5)**: Comfortable margin
-- **Red badge (≤5)**: Critical task, little room for delay
-
-### Machine Utilization
-Percentage of time each machine is actively working
-
-## 🎨 Customization
-
-### Change Color Scheme
-Edit `scheduler/templates/scheduler/base.html`:
-
-```css
-:root {
-    --primary-color: #2c3e50;    /* Dark blue */
-    --secondary-color: #3498db;  /* Light blue */
-    --success-color: #2ecc71;    /* Green */
-}
-```
-
-### Modify Gantt Chart
-Edit `scheduler/solver.py` → `Machine_Parallele.generate_gantt_chart()`
-
-## 🐛 Troubleshooting
-
-### No Solution Found
-- Increase number of machines
-- Relax due dates (increase slack)
-- Check for circular dependencies in task successors
-- Verify release_date + duration ≤ due_date for all tasks
-
-### CSV Upload Errors
-- Ensure UTF-8 encoding
-- Check for proper comma separation
-- Verify MACHINES line format
-- Remove any extra blank lines
-
-### Django Errors
-```powershell
-# Clear cache and restart
-python manage.py flush
-python manage.py migrate
-python manage.py runserver
-```
-
-## 📚 API Reference
-
-### Models
-
-**Schedule**
-- `name`: Schedule identifier
-- `status`: pending | solved | no_solution | error
-- `makespan`: Total completion time
-- `objective_value`: Optimization metric
-
-**Machine**
-- `name`: Machine identifier
-- `schedule`: ForeignKey to Schedule
-
-**Task**
-- `name`: Task identifier
-- `duration`: Execution time
-- `successor_name`: Dependent task
-- `release_date`: Earliest start time
-- `due_date`: Latest completion time
-- `assigned_machine`: Assigned machine (after solving)
-- `start_time`: Computed start time
-- `end_time`: Computed end time
-- `slack`: Time buffer to due date
-
-## 🔒 Security Notes
-
-**For Production:**
-
-1. Change `SECRET_KEY` in `settings.py`
-2. Set `DEBUG = False`
-3. Configure `ALLOWED_HOSTS`
-4. Use environment variables for sensitive data
-5. Enable HTTPS
-6. Set up proper database authentication
-
-## 📝 Sample CSV Files
-
-The original project includes:
-- `dataset_facile.csv` - Easy problem (high slack)
-- `dataset_moyen.csv` - Medium problem
-- `dataset_difficile.csv` - Hard problem (tight constraints)
-
-Copy these to `scheduler_project/media/samples/` for quick testing.
-
-## 🤝 Contributing
-
-To extend the application:
-
-1. **Add new solver constraints**: Edit `scheduler/solver.py`
-2. **Custom visualizations**: Modify `generate_gantt_chart()`
-3. **Additional exports**: Create new functions in `pdf_export.py`
-4. **New views**: Add to `scheduler/views.py` and `urls.py`
-
-## 📧 Support
-
-For issues or questions:
-1. Check the troubleshooting section
-2. Review Django documentation: https://docs.djangoproject.com/
-3. OR-Tools guide: https://developers.google.com/optimization
-
-## 📄 License
-
-This project is for educational and commercial use.
+**Règles :**
+1. Ligne d’en-tête obligatoire  
+2. Utiliser "none" pour les tâches sans successeur  
+3. Ligne vide avant la section MACHINES  
+4. Machines entre guillemets, séparées par des virgules  
+5. Encodage UTF-8 recommandé
 
 ---
 
-**Happy Scheduling! 🎉**
+## Personnalisation
+
+### Couleurs
+Modifiez `scheduler/templates/scheduler/base.html` :
+
+```css
+:root {
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --success-color: #2ecc71;
+  --danger-color: #e74c3c;
+}
+```
+
+### Fonction Objectif
+Adaptez la classe `Machine_Parallele` dans `scheduler/solver.py` pour modifier la stratégie d’optimisation.
+
+---
+
+## Dépannage
+
+### Aucune solution trouvée
+- Augmenter le nombre de machines  
+- Diminuer les durées ou prolonger les échéances  
+- Vérifier les dépendances entre tâches
+
+### Erreur lors de l’import CSV
+- Vérifier la présence des en-têtes  
+- Vérifier la ligne MACHINES  
+- S’assurer de l’encodage UTF-8
+
+---
+
+## Performance
+
+| Taille | Tâches | Machines | Temps |
+|--------|--------|-----------|-------|
+| Petite | 6 | 4 | < 1 s |
+| Moyenne | 10–20 | 3–5 | 1–5 s |
+| Grande | 30–50 | 5–10 | 5–30 s |
+
+**Recommandations :**  
+- Cas idéal : 10–30 tâches, 3–10 machines  
+- Limite pratique : environ 100 tâches, 20 machines
+
+---
+
+**Version :** 1.0  
+**Dernière mise à jour :** Novembre 2025  
+**Auteur :** Projet Tuteuré – Ordonnancement sur Machines Parallèles  
